@@ -1,6 +1,36 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const LOCAL_API_BASE_URL = 'http://localhost:5000/api';
+
+const isLocalHostname = (hostname: string) =>
+  hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1';
+
+const getApiBaseUrl = () => {
+  const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+  if (configuredApiUrl) {
+    return configuredApiUrl;
+  }
+
+  if (typeof window === 'undefined') {
+    return LOCAL_API_BASE_URL;
+  }
+
+  if (isLocalHostname(window.location.hostname)) {
+    return LOCAL_API_BASE_URL;
+  }
+
+  return '/api';
+};
+
+export const getBackendConnectionMessage = () => {
+  if (typeof window !== 'undefined' && isLocalHostname(window.location.hostname)) {
+    return 'Cannot connect to the backend. Start the backend server on http://localhost:5000 and try again.';
+  }
+
+  return 'Cannot connect to the backend. Check that the backend is deployed and the API URL is configured correctly, then try again.';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -41,6 +71,8 @@ export const authApi = {
   signup: (username: string, email: string, password: string) =>
     api.post('/auth/signup', { username, email, password }),
   signin: (email: string, password: string) => api.post('/auth/signin', { email, password }),
+  forgotPassword: (email: string, password: string) =>
+    api.post('/auth/forgot-password', { email, password }),
   me: () => api.get('/auth/me'),
 };
 

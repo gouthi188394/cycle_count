@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock } from 'lucide-react';
 import { AxiosError } from 'axios';
-import { authApi } from '../services/api';
+import { authApi, getBackendConnectionMessage } from '../services/api';
 import { useAuthStore } from '../store/authStore';
 
 export default function SigninPage() {
@@ -19,7 +19,7 @@ export default function SigninPage() {
   const getErrorMessage = (error: unknown) => {
     const axiosError = error as AxiosError<{ error?: string }>;
     if (!axiosError.response) {
-      return 'Cannot connect to the backend. Start the backend server on http://localhost:5000 and try again.';
+      return getBackendConnectionMessage();
     }
 
     return axiosError.response.data?.error || 'Sign in failed';
@@ -95,6 +95,11 @@ export default function SigninPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
+            </div>
+            <div className="mt-2 text-right">
+              <Link to="/forgot-password" className="text-sm text-blue-500 hover:text-blue-600 font-medium">
+                Forgot password?
+              </Link>
             </div>
           </div>
 

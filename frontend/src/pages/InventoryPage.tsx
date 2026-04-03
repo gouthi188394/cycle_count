@@ -2,7 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { AxiosError } from 'axios';
 import { Download, Upload } from 'lucide-react';
 import Header from '../components/Header';
-import { inventoryApi, type InventoryItem, type UploadValidationError } from '../services/api';
+import {
+  getBackendConnectionMessage,
+  inventoryApi,
+  type InventoryItem,
+  type UploadValidationError,
+} from '../services/api';
 
 const TEMPLATE_CONTENT = `Stock No,Batch No,Closing Qty
 BC01963,BCT002,45
@@ -99,7 +104,7 @@ export default function InventoryPage() {
       }>;
 
       if (!axiosError.response) {
-        setError('Cannot connect to the backend. Start the backend server and try again.');
+        setError(getBackendConnectionMessage());
       } else {
         setError(axiosError.response.data?.error || 'Failed to upload file');
         setValidationErrors(axiosError.response.data?.errors || []);

@@ -2,7 +2,7 @@ import { useRef, useState } from 'react';
 import { AxiosError } from 'axios';
 import { Download, Upload } from 'lucide-react';
 import Header from '../components/Header';
-import { inventoryApi } from '../services/api';
+import { getBackendConnectionMessage, inventoryApi } from '../services/api';
 
 const TEMPLATE_CONTENT = `BARCODE,BATCHNO,STOCKNO,CLOSINGQTY
 11011,SECOND,SEC-1,106
@@ -20,7 +20,7 @@ export default function InventoryPage() {
   const getErrorMessage = (error: unknown) => {
     const axiosError = error as AxiosError<{ error?: string }>;
     if (!axiosError.response) {
-      return 'Cannot connect to the backend. Start the backend server on http://localhost:5000 and try again.';
+      return getBackendConnectionMessage();
     }
 
     return axiosError.response.data?.error || 'Failed to upload file';
