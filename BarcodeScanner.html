@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Scanner & Generator</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.4/html5-qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            background: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .tab-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .output-area {
+            margin-top: 30px;
+            text-align: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .barcode-display {
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            display: inline-block;
+        }
+
+        #barcode, #barcode-code {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .scanner-container {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        #qr-reader {
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        #qr-reader__dashboard {
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result.error {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            color: #2e7d32;
+        }
+
+        .error {
+            color: #c62828;
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .preview-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .preview-item:hover {
+            transform: scale(1.05);
+            border-color: #667eea;
+        }
+
+        .preview-item svg, .preview-item img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 5px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            margin-top: 5px;
+        }
+
+        hr {
+            margin: 30px 0;
+            border: none;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab-button {
+                width: 100%;
+            }
+
+            .tab-content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 Barcode Scanner & Generator</h1>
+            <p>Generate, display, and scan barcodes instantly</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" onclick="switchTab('generator')">📋 Generate Barcode</button>
+            <button class="tab-button" onclick="switchTab('scanner')">📱 Scan Barcode</button>
+            <button class="tab-button" onclick="switchTab('batch')">🔄 Batch Generate</button>
+            <button class="tab-button" onclick="switchTab('help')">❓ Help</button>
+        </div>
+
+        <!-- Generator Tab -->
+        <div id="generator" class="tab-content active">
+            <h2>Generate Barcode</h2>
+            <div class="info-box">
+                <strong>ℹ️ Tip:</strong> Enter a barcode number (e.g., 11011, 11012, etc.) and select format. Copy the barcode or download as image.
+            </div>
+
+            <div class="form-group">
+                <label for="barcodeInput">Barcode Number *</label>
+                <input type="text" id="barcodeInput" placeholder="Enter barcode (e.g., 11011)" value="11011">
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="barcodeFormat">Barcode Format *</label>
+                    <select id="barcodeFormat">
+                        <option value="code128">Code 128 (Recommended)</option>
+                        <option value="code39">Code 39</option>
+                        <option value="ean13">EAN-13</option>
+                        <option value="upca">UPC-A</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="barcodeHeight">Height (px)</label>
+                    <input type="number" id="barcodeHeight" value="100" min="50" max="300">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="generateBarcode()">🔧 Generate</button>
+                <button onclick="downloadBarcode()">⬇️ Download PNG</button>
+                <button onclick="copyBarcode()">📋 Copy</button>
+                <button onclick="clearBarcode()">🗑️ Clear</button>
+            </div>
+
+            <div class="output-area">
+                <h3>Preview</h3>
+                <div class="barcode-display" id="barcodeDisplay">
+                    <svg id="barcode"></svg>
+                </div>
+                <p id="barcodeValue" style="color: #666; font-size: 0.9em; margin-top: 10px;"></p>
+            </div>
+        </div>
+
+        <!-- Scanner Tab -->
+        <div id="scanner" class="tab-content">
+            <h2>Scan Barcode</h2>
+            <div class="info-box">
+                <strong>ℹ️ How to use:</strong> Allow camera access and scan a barcode. The app will automatically detect and display the barcode number.
+            </div>
+
+            <div class="scanner-container">
+                <div id="qr-reader" style="width: 100%;"></div>
+            </div>
+
+            <div class="result" id="scanResult">
+                <strong>📍 Scanned Barcode:</strong> <span id="scannedValue"></span>
+            </div>
+
+            <div class="button-group">
+                <button onclick="startScanner()">▶️ Start Scanner</button>
+                <button onclick="stopScanner()">⏹️ Stop Scanner</button>
+                <button onclick="clearScanResult()">🗑️ Clear</button>
+            </div>
+
+            <div id="scanHistory" style="margin-top: 30px; display: none;">
+                <h3>Scan History</h3>
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <!-- Batch Generate Tab -->
+        <div id="batch" class="tab-content">
+            <h2>Batch Generate Barcodes</h2>
+            <div class="info-box">
+                <strong>ℹ️ Create multiple barcodes:</strong> Enter barcode numbers (one per line) to generate multiple barcodes at once.
+            </div>
+
+            <div class="form-group">
+                <label for="batchInput">Barcode Numbers (one per line) *</label>
+                <textarea id="batchInput" rows="8" placeholder="11011&#10;11012&#10;11013&#10;11014&#10;11015"></textarea>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="batchFormat">Barcode Format</label>
+                    <select id="batchFormat">
+                        <option value="code128">Code 128</option>
+                        <option value="code39">Code 39</option>
+                        <option value="ean13">EAN-13</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="batchHeight">Height (px)</label>
+                    <input type="number" id="batchHeight" value="80" min="50" max="200">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button onclick="generateBatchBarcodes()">🔧 Generate All</button>
+                <button onclick="downloadBatchBarcodes()">⬇️ Download All as ZIP</button>
+                <button onclick="printBarcodes()">🖨️ Print</button>
+                <button onclick="clearBatch()">🗑️ Clear</button>
+            </div>
+
+            <div class="output-area">
+                <h3>Generated Barcodes</h3>
+                <div id="batchPreview" class="preview-grid"></div>
+            </div>
+        </div>
+
+        <!-- Help Tab -->
+        <div id="help" class="tab-content">
+            <h2>Help & Information</h2>
+
+            <h3>📋 Barcode Formats</h3>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li><strong>Code 128:</strong> Most common, handles all ASCII characters, good for inventory</li>
+                <li><strong>Code 39:</strong> Alphanumeric, simple to use</li>
+                <li><strong>EAN-13:</strong> European standard, 13 digits required</li>
+                <li><strong>UPC-A:</strong> US standard, 12 digits required</li>
+            </ul>
+
+            <hr>
+
+            <h3>📱 How to Scan</h3>
+            <ol style="margin-left: 20px; line-height: 1.8;">
+                <li>Go to "Scan Barcode" tab</li>
+                <li>Click "Start Scanner"</li>
+                <li>Allow camera access when prompted</li>
+                <li>Point camera at barcode</li>
+                <li>Wait for automatic detection</li>
+                <li>Barcode number will appear below</li>
+            </ol>
+
+            <hr>
+
+            <h3>🔧 How to Generate</h3>
+            <ol style="margin-left: 20px; line-height: 1.8;">
+                <li>Go to "Generate Barcode" tab</li>
+                <li>Enter barcode number (numbers only)</li>
+                <li>Select format from dropdown</li>
+                <li>Click "Generate"</li>
+                <li>Preview will appear below</li>
+                <li>Use "Download PNG" to save as image</li>
+                <li>Use "Copy" to copy to clipboard</li>
+            </ol>
+
+            <hr>
+
+            <h3>📦 Batch Generation</h3>
+            <ol style="margin-left: 20px; line-height: 1.8;">
+                <li>Go to "Batch Generate" tab</li>
+                <li>Paste multiple barcode numbers (one per line)</li>
+                <li>Choose format and height</li>
+                <li>Click "Generate All"</li>
+                <li>All barcodes preview below</li>
+                <li>Download as ZIP or Print directly</li>
+            </ol>
+
+            <hr>
+
+            <h3>💡 Tips & Tricks</h3>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li>Use 100-150px height for printing</li>
+                <li>Code 128 is most compatible with scanners</li>
+                <li>For best scanning, use good lighting</li>
+                <li>EAN-13 requires exactly 13 digits</li>
+                <li>Keep barcodes away from edges when printing</li>
+                <li>Test scan with scanner hardware before using in production</li>
+            </ul>
+
+            <hr>
+
+            <h3>🔗 Integration with Cycle Count App</h3>
+            <p style="line-height: 1.8;">
+                Use this tool to generate test barcodes for the Cycle Count application. 
+                Generate barcodes matching your inventory (11011, 11012, 11013, etc.), 
+                print them, and use them to test the scanner functionality.
+            </p>
+
+            <hr>
+
+            <h3>📊 Example Usage</h3>
+            <div class="info-box" style="text-align: left;">
+                <strong>Scenario:</strong> You have inventory with barcodes 11011-11041<br><br>
+                <strong>Step 1:</strong> Generate barcode for 11011 or use batch mode for all<br>
+                <strong>Step 2:</strong> Print the barcodes<br>
+                <strong>Step 3:</strong> Attach to items or display on shelf<br>
+                <strong>Step 4:</strong> Use Scanner tab to scan<br>
+                <strong>Step 5:</strong> Verify barcode is recognized correctly
+            </div>
+
+            <hr>
+
+            <h3>🆘 Troubleshooting</h3>
+            <ul style="margin-left: 20px; line-height: 1.8;">
+                <li><strong>Scanner not working:</strong> Check browser permissions for camera</li>
+                <li><strong>Barcode not scanning:</strong> Ensure barcode is in focus, try different angle</li>
+                <li><strong>Download not working:</strong> Check browser's download permissions</li>
+                <li><strong>Format error:</strong> Check barcode follows format requirements (e.g., EAN-13 needs 13 digits)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let scannerRunning = false;
+        let html5QrcodeScanner;
+        let scanHistory = [];
+        let batchBarcodes = {};
+
+        function switchTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tab === 'scanner' && html5QrcodeScanner) {
+                setTimeout(() => {
+                    if (!scannerRunning) {
+                        startScanner();
+                    }
+                }, 100);
+            }
+        }
+
+        function generateBarcode() {
+            const barcode = document.getElementById('barcodeInput').value.trim();
+            const format = document.getElementById('barcodeFormat').value;
+            const height = parseInt(document.getElementById('barcodeHeight').value);
+
+            if (!barcode) {
+                alert('Please enter a barcode number');
+                return;
+            }
+
+            try {
+                JsBarcode("#barcode", barcode, {
+                    format: format,
+                    height: height,
+                    margin: 10,
+                    lineColor: "#000000"
+                });
+
+                document.getElementById('barcodeValue').textContent = `Barcode: ${barcode} | Format: ${format.toUpperCase()}`;
+            } catch (e) {
+                alert('Error generating barcode: ' + e.message);
+            }
+        }
+
+        function downloadBarcode() {
+            const barcode = document.getElementById('barcodeInput').value.trim();
+            if (!barcode) {
+                alert('Generate a barcode first');
+                return;
+            }
+
+            const svg = document.querySelector('#barcode svg');
+            if (!svg) {
+                alert('Generate a barcode first');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const svgString = new XMLSerializer().serializeToString(svg);
+            const img = new Image();
+
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0);
+
+                const link = document.createElement('a');
+                link.href = canvas.toDataURL('image/png');
+                link.download = `barcode_${barcode}.png`;
+                link.click();
+            };
+
+            img.src = 'data:image/svg+xml;base64,' + btoa(svgString);
+        }
+
+        function copyBarcode() {
+            const barcode = document.getElementById('barcodeInput').value.trim();
+            if (!barcode) {
+                alert('Enter a barcode first');
+                return;
+            }
+
+            navigator.clipboard.writeText(barcode).then(() => {
+                alert('Barcode copied to clipboard!');
+            }).catch(err => {
+                alert('Failed to copy: ' + err);
+            });
+        }
+
+        function clearBarcode() {
+            document.getElementById('barcodeInput').value = '';
+            document.getElementById('barcodeValue').textContent = '';
+            document.getElementById('barcode').innerHTML = '';
+        }
+
+        function startScanner() {
+            if (scannerRunning) return;
+
+            html5QrcodeScanner = new Html5Qrcode("qr-reader");
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 250 } },
+                onScanSuccess,
+                onScanFailure
+            ).catch(err => {
+                console.error('Error starting scanner:', err);
+                alert('Could not start scanner. Make sure you allow camera access.');
+            });
+
+            scannerRunning = true;
+        }
+
+        function stopScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    scannerRunning = false;
+                }).catch(err => console.error(err));
+            }
+        }
+
+        function onScanSuccess(decodedText) {
+            document.getElementById('scannedValue').textContent = decodedText;
+            document.getElementById('scanResult').classList.add('show');
+
+            if (!scanHistory.includes(decodedText)) {
+                scanHistory.push(decodedText);
+                updateScanHistory();
+            }
+        }
+
+        function onScanFailure(error) {
+            // Silently handle scan failures
+        }
+
+        function clearScanResult() {
+            document.getElementById('scanResult').classList.remove('show');
+            document.getElementById('scannedValue').textContent = '';
+            scanHistory = [];
+            document.getElementById('historyList').innerHTML = '';
+            document.getElementById('scanHistory').style.display = 'none';
+        }
+
+        function updateScanHistory() {
+            document.getElementById('scanHistory').style.display = 'block';
+            const historyHtml = scanHistory.map(barcode => 
+                `<div style="padding: 10px; background: white; margin: 5px 0; border-radius: 4px; border-left: 3px solid #667eea;">${barcode}</div>`
+            ).join('');
+            document.getElementById('historyList').innerHTML = historyHtml;
+        }
+
+        function generateBatchBarcodes() {
+            const input = document.getElementById('batchInput').value.trim();
+            const format = document.getElementById('batchFormat').value;
+            const height = parseInt(document.getElementById('batchHeight').value);
+
+            if (!input) {
+                alert('Enter barcode numbers');
+                return;
+            }
+
+            const barcodes = input.split('\n').map(b => b.trim()).filter(b => b);
+            batchBarcodes = {};
+            let html = '';
+
+            barcodes.forEach((barcode, index) => {
+                const id = `barcode-${index}`;
+                batchBarcodes[barcode] = id;
+
+                try {
+                    html += `<div class="preview-item"><svg id="${id}"></svg><span class="badge">${barcode}</span></div>`;
+                } catch (e) {
+                    console.error('Error with barcode:', barcode);
+                }
+            });
+
+            document.getElementById('batchPreview').innerHTML = html;
+
+            // Generate all barcodes
+            barcodes.forEach((barcode, index) => {
+                const id = `barcode-${index}`;
+                try {
+                    JsBarcode(`#${id}`, barcode, {
+                        format: format,
+                        height: height,
+                        margin: 5
+                    });
+                } catch (e) {
+                    console.error('Error generating:', barcode, e);
+                }
+            });
+        }
+
+        function downloadBatchBarcodes() {
+            alert('Download as ZIP is available in premium version. You can download each barcode individually by right-clicking.');
+        }
+
+        function printBarcodes() {
+            const output = document.getElementById('batchPreview').innerHTML;
+            const printWindow = window.open('', '', 'height=600,width=800');
+            printWindow.document.write(`
+                <html>
+                <head>
+                    <title>Print Barcodes</title>
+                    <style>
+                        body { font-family: Arial; margin: 10px; }
+                        .preview-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin: 20px 0; }
+                        .preview-item { text-align: center; padding: 20px; border: 1px dashed #ccc; }
+                        .preview-item svg { max-width: 100%; height: auto; }
+                        @media print { body { margin: 0; } }
+                    </style>
+                </head>
+                <body>
+                    <h2>Barcode Print Sheet</h2>
+                    <div class="preview-grid">${output}</div>
+                    <script>window.print();</script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+
+        function clearBatch() {
+            document.getElementById('batchInput').value = '';
+            document.getElementById('batchPreview').innerHTML = '';
+            batchBarcodes = {};
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Pre-fill with example
+            generateBarcode();
+        });
+    </script>
+</body>
+</html>
